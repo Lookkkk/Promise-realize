@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    function Promise(f) {
+        this.state = 'padding';
+        this.f = f;
+        this.catch_state = false;
+
+        if (f !== 'then_promise') {
+            try {
+                f(this.resolve_f, this.reject_f)
+            } catch (err) {
+                if (this.catch_state) {
+                    this.state = 'reject';
+                    this.catch_f && this.catch_f(err);
+                } else {
+                    this.reject_f(err);
+                }
+            }
+        }
+    }
+
+    Promise.prototype.then = function (resolve, reject) {
+        resolve ? this.then_resolve = resolve : null;
+        reject ? this.then_reject = reject : null;
+        try {
+            this.resolve_f = (...arg) => {
+                this.resolve_arg = arg;
+                if (this.then_resolve && this.state === 'padding') {
+                    this.state = 'resolve';
+                    setTimeout(() => {
+                        this.resolve_next_value = this.then_resolve(...this.resolve_arg);
+                        if (this.next_p.then_resolve && this.next_p.f === 'then_promise') {
+                            this.next_p.resolve_f(this.resolve_next_value);
+                        }
+                    })
+                }
+            };
+        } catch (err) {
+            if (this.catch_state) {
+                this.state = 'reject';
+                this.catch_f && this.catch_f(err);
+            } else {
+                this.reject_f(err);
+            }
+        }
+        try {
+            this.reject_f = (...arg) => {
+                this.reject_arg = arg;
+                if (this.then_reject && this.state === 'padding') {
+                    this.state = 'reject';
+                    setTimeout(() => {
+                        this.reject_next_value = this.then_reject(...this.reject_arg);
+                        if (this.next_p.then_resolve && this.next_p.f === 'then_promise') {
+                            this.next_p.reject_f(this.reject_next_value);
+                        }
+                    })
+                }
+            };
+        } catch (err) {
+            if (this.catch_state) {
+                this.state = 'reject';
+                this.catch_f && this.catch_f(err);
+            } else {
+                this.reject_f(err);
+            }
+        }
+        let next_p = new Promise('then_promise');
+        this.next_p = next_p;
+        return next_p
+    };
+    Promise.prototype.all = function () {
+
+    };
+    Promise.prototype.catch = function (f) {
+        this.catch_state = true;
+        this.catch_f = f;
+    };
+    var p = new Promise(function (resolve, reject) {
+        console.log('p1');
+        setTimeout(function () {
+            resolve('p2');
+        }, 3000);
+    });
+    p.then(data => {
+        console.log(data);
+        return 'p4'
+    }).then(data => {
+        console.log(data);
+        return 'p5';
+    }).then(data => {
+        console.log(data);
+    });
+    console.log('p3');
+</script>
+<!--<script datatype="promise1">
+    function Promise(f) {
+        this.state = 'padding';
+        this.resolve_f = (...arg) => {
+            this.resolve_arg = arg;
+            setTimeout(() => {
+                this.state = 'resolve';
+                if (this.then_resolve && this.state === 'resolve') {
+                    this.resolve_next_value = this.then_resolve(...this.resolve_arg);
+                }
+            })
+        };
+        this.reject_f = (...arg) => {
+            this.reject_arg = arg;
+            setTimeout(() => {
+                this.state = 'reject';
+                if (this.then_reject && this.state === 'padding') {
+                    this.reject_next_value = this.then_reject(...this.reject_arg);
+                }
+            })
+        };
+        f(this.resolve_f, this.reject_f);
+    }
+
+    Promise.prototype.then = function (resolve, reject) {
+        resolve ? this.then_resolve = resolve : null;
+        reject ? this.then_reject = reject : null;
+        let next_f = (resolve, reject) => {
+            let timer = setInterval(() => {
+                if (this.state === 'resolve') {
+                    resolve(this.resolve_next_value);
+                    clearInterval(timer);
+                }
+                if (this.state === 'reject') {
+                    reject(this.reject_next_value);
+                    clearInterval(timer);
+                }
+            })
+        };
+        return new Promise(next_f);
+    };
+    Promise.prototype.all = function () {
+
+    };
+    var p = new Promise(function (resolve, reject) {
+        console.log('p1');
+        setTimeout(function () {
+            resolve('p2');
+        }, 3000);
+    });
+    p.then(data => {
+        console.log(data);
+        return 'p4'
+    }).then(data => {
+        console.log(data);
+        return 'p5';
+    }).then(data => {
+        console.log(data);
+    });
+    console.log('p3');
+</script>-->
+<!--<script>
+    function Promise(f) {
+        this.state = 'padding';
+        this.f = f;
+        this.catch_state = false;
+
+        if (f !== 'then_promise') {
+            try {
+                f(this.resolve_f, this.reject_f)
+            } catch (err) {
+                if (this.catch_state) {
+                    this.state = 'reject';
+                    this.catch_f && this.catch_f(err);
+                } else {
+                    this.reject_f(err);
+                }
+            }
+        }
+    }
+
+    Promise.prototype.then = function (resolve, reject) {
+        resolve ? this.then_resolve = resolve : null;
+        reject ? this.then_reject = reject : null;
+        try {
+            this.resolve_f = (...arg) => {
+                this.resolve_arg = arg;
+                if (this.then_resolve && this.state === 'padding') {
+                    this.state = 'resolve';
+                    setTimeout(() => {
+                        this.resolve_next_value = this.then_resolve(...this.resolve_arg);
+                        if (this.next_p.then_resolve && this.next_p.f === 'then_promise') {
+                            this.next_p.resolve_f(this.resolve_next_value);
+                        }
+                    })
+                }
+            };
+        } catch (err) {
+            if (this.catch_state) {
+                this.state = 'reject';
+                this.catch_f && this.catch_f(err);
+            } else {
+                this.reject_f(err);
+            }
+        }
+        try {
+            this.reject_f = (...arg) => {
+                this.reject_arg = arg;
+                if (this.then_reject && this.state === 'padding') {
+                    this.state = 'reject';
+                    setTimeout(() => {
+                        this.reject_next_value = this.then_reject(...this.reject_arg);
+                        if (this.next_p.then_resolve && this.next_p.f === 'then_promise') {
+                            this.next_p.reject_f(this.reject_next_value);
+                        }
+                    })
+                }
+            };
+        } catch (err) {
+            if (this.catch_state) {
+                this.state = 'reject';
+                this.catch_f && this.catch_f(err);
+            } else {
+                this.reject_f(err);
+            }
+        }
+        let next_p = new Promise('then_promise');
+        this.next_p = next_p;
+        return next_p
+    };
+    Promise.prototype.all = function () {
+
+    };
+    Promise.prototype.catch = function (f) {
+        this.catch_state = true;
+        this.catch_f = f;
+    };
+    var p = new Promise(function (resolve, reject) {
+        console.log('p1');
+        setTimeout(function () {
+            resolve('p2');
+        }, 3000);
+    });
+    p.then(data => {
+        console.log(data);
+        return 'p4'
+    }).then(data => {
+        console.log(data);
+        return 'p5';
+    }).then(data => {
+        console.log(data);
+    });
+    console.log('p3');
+</script>-->
+</body>
+</html>
