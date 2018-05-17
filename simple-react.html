@@ -135,10 +135,8 @@
             //调用inst.componentDidMount
             inst.componentDidMount && inst.componentDidMount(inst.props, inst.state);
         });
-
         return renderedMarkup;
     };
-
     function ReactCompositeComponent(element) {
         //存放元素element对象
         this._currentElement = element;
@@ -150,27 +148,6 @@
 </script>
 <!--文本组件类-->
 <script title="ReactDOMTextComponent">
-    ReactDOMTextComponent.prototype.receiveComponent = function (nextText) {
-        var nextStringText = '' + nextText;
-        //跟以前保存的字符串比较
-        if (nextStringText !== this._currentElement) {
-            this._currentElement = nextStringText;
-            //替换整个节点
-            $('[data-reactid="' + this._rootNodeID + '"]').html(this._currentElement);
-
-        }
-    };
-
-    ReactDOMTextComponent.prototype.receiveComponent = function (nextText) {
-        var nextStringText = '' + nextText;
-        //跟以前保存的字符串比较
-        if (nextStringText !== this._currentElement) {
-            this._currentElement = nextStringText;
-            //替换整个节点
-            $('[data-reactid="' + this._rootNodeID + '"]').html(this._currentElement);
-
-        }
-    };
     //我们引入了component类的概念，ReactDOMTextComponent是一个component类定义，定义对于这种文本类型的节点，在渲染，更新，删除时应该做什么操作，这边暂时只用到渲染，另外两个可以先忽略,
     //component类，用来表示文本在渲染，更新，删除时应该做些什么事情
     //用于文本组件
@@ -181,6 +158,15 @@
         this._rootNodeID = null;
     }
 
+    ReactDOMTextComponent.prototype.receiveComponent = function (nextText) {
+        var nextStringText = '' + nextText;
+        //跟以前保存的字符串比较
+        if (nextStringText !== this._currentElement) {
+            this._currentElement = nextStringText;
+            //替换整个节点
+            $('[data-reactid="' + this._rootNodeID + '"]').html(this._currentElement);
+        }
+    };
     //挂载组件
     //component组件类，用来表示文本在渲染，更新，删除时应该做些什么事情
     ReactDOMTextComponent.prototype.mountComponent = function (rootID) {
@@ -191,6 +177,12 @@
 </script>
 <!--普通DOM元素类-->
 <script title="ReactDOMComponent">
+    //component类，用来表示浏览器基本元素在渲染，更新，删除时应该做些什么事情
+    function ReactDOMComponent(element) {
+        //存下当前的element对象引用
+        this._currentElement = element;
+        this._rootNodeID = null;
+    }
     ReactDOMComponent.prototype.receiveComponent = function (nextElement) {
         var lastProps = this._currentElement.props;
         var nextProps = nextElement.props;
@@ -217,11 +209,9 @@
                 $(document).undelegate('[data-reactid="' + this._rootNodeID + '"]', eventType, lastProps[propKey]);
                 continue;
             }
-
             //从dom上删除不需要的属性
             $('[data-reactid="' + this._rootNodeID + '"]').removeAttr(propKey)
         }
-
         //对于新的属性，需要写到dom节点上
         for (propKey in nextProps) {
             //对于事件监听的属性我们需要特殊处理
@@ -239,14 +229,11 @@
             //添加新的属性，或者是更新老的同名属性
             $('[data-reactid="' + this._rootNodeID + '"]').prop(propKey, nextProps[propKey])
         }
-
     };
-
     //全局的更新深度标识
     var updateDepth = 0;
     //全局的更新队列，所有的差异都存在这里
     var diffQueue = [];
-
     ReactDOMComponent.prototype._updateDOMChildren = function (nextChildrenElements) {
         updateDepth++;
         //_diff用来递归找出差别,组装差异对象,添加到更新队列diffQueue。
@@ -258,14 +245,6 @@
             diffQueue = [];
         }
     };
-
-    //component类，用来表示浏览器基本元素在渲染，更新，删除时应该做些什么事情
-    function ReactDOMComponent(element) {
-        //存下当前的element对象引用
-        this._currentElement = element;
-        this._rootNodeID = null;
-    }
-
     //component渲染时生成的dom结构
     ReactDOMComponent.prototype.mountComponent = function (rootID) {
         //赋值标识
@@ -273,20 +252,16 @@
         var props = this._currentElement.props;
         var tagOpen = '<' + this._currentElement.type;
         var tagClose = '</' + this._currentElement.type + '>';
-
         //加上reactid标识
         tagOpen += ' data-reactid=' + this._rootNodeID;
-
         //拼凑出属性
         for (var propKey in props) {
-
             //这里要做一下事件的监听，就是从属性props里面解析拿出on开头的事件属性的对应事件监听
             if (/^on[A-Za-z]/.test(propKey)) {
                 var eventType = propKey.replace('on', '');
                 //针对当前的节点添加事件代理,以_rootNodeID为命名空间
                 $(document).delegate('[data-reactid="' + this._rootNodeID + '"]', eventType + '.' + this._rootNodeID, props[propKey]);
             }
-
             //对于children属性以及事件监听的属性不需要进行字符串拼接
             //事件会代理到全局。这边不能拼到dom上不然会产生原生的事件监听
             if (props[propKey] && propKey != 'children' && !/^on[A-Za-z]/.test(propKey)) {
@@ -305,7 +280,6 @@
             //这里再次调用了instantiateReactComponent实例化子节点component类，拼接好返回
             var childComponentInstance = instantiateReactComponent(child);
             childComponentInstance._mountIndex = key;
-
             childrenInstances.push(childComponentInstance);
             //子节点的rootId是父节点的rootId加上新的key也就是顺序的值拼成的新值
             var curRootId = that._rootNodeID + '.' + key;
@@ -313,12 +287,10 @@
             var childMarkup = childComponentInstance.mountComponent(curRootId);
             //拼接在一起
             content += ' ' + childMarkup;
-
         });
         console.log(content);
         //留给以后更新时用的这边先不用管
         this._renderedChildren = childrenInstances;
-
         //拼出整个html内容
         return tagOpen + '>' + content + tagClose;
     };
@@ -333,7 +305,6 @@
     };
     //自定义组件类Constructor的实例可以调用ReactClass类原型上的setState方法，
     ReactClass.prototype.setState = function (newState) {
-
         //还记得我们在ReactCompositeComponent里面mount的时候 做了赋值
         //所以这里可以拿到 对应的ReactCompositeComponent的实例_reactInternalInstance
         this._reactInternalInstance.receiveComponent(null, newState);
@@ -556,7 +527,6 @@
         var beforeChild = parentNode.children().get(index);
         beforeChild ? childNode.insertBefore(beforeChild) : childNode.appendTo(parentNode);
     }
-
     ReactDOMComponent.prototype._patch = function (updates) {
         var update;
         var initialChildren = {};
@@ -608,7 +578,6 @@
     function hello() {
         alert('hello');
     }
-
     var HelloMessage = React.createClass({
         getInitialState: function () {
             return {type: 'say:'};
@@ -621,20 +590,8 @@
             return React.createElement("div", {onclick: this.changeType.bind(this)}, this.state.type, "Hello ", this.props.name);
         }
     });
-
-
     //{name: "John"}变成Constructor类的实例的props，
     React.render(React.createElement(HelloMessage, {name: "John"}), document.getElementById("container"));
 </script>
-<!--<script>
-    function hello() {
-        alert('hello');
-    }
-
-    var element = React.createElement('div', {id: 'test', onclick: hello}, 'click me','dsadas');
-    console.log(element);
-    React.render(element, document.getElementById("container"));
-</script>-->
-
 </body>
 </html>
